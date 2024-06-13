@@ -14,17 +14,23 @@ def setup_openai_api():
     openai.api_key = api_key
 
 
-def generate_content(prompt: str):
+def generate_content(prompt: str, conversation_history: list):
     try:
         setup_openai_api()
+
+        # Add new user prompt to the conversation history
+        conversation_history.append({"role": "user", "content": prompt})
+
         response = openai.ChatCompletion.create(
             model=MODEL_ID,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt},
-            ],
+            messages=conversation_history,
         )
+
         message = response['choices'][0]['message']["content"]
+
+        # Add assistant's response to the conversation history
+        conversation_history.append({"role": "assistant", "content": message})
+
         for char in message:
             print(char, end="", flush=True)
             time.sleep(0.02)
@@ -42,16 +48,21 @@ def main(input_prompt=None):
     """
     print(welcoming_text)
 
+    # Initialize conversation history with system message
+    conversation_history = [
+        {"role": "system", "content": "You are a helpful assistant."}
+    ]
+
     if input_prompt is None:
         while True:
             prompt = input("\n> ")
             if prompt == "exit()":
                 exit()
-            generate_content(prompt)
+            generate_content(prompt, conversation_history)
     else:
         if input_prompt == "exit()":
             exit()
-        generate_content(input_prompt)
+        generate_content(input_prompt, conversation_history)
 
 
 if __name__ == "__main__":
