@@ -22,6 +22,9 @@ pip install cerebras-cloud-sdk
 3. Set up your Cerebras API Key as an environment variable:
 ```
 export CEREBRAS_API_KEY=your_api_key_here
+export CEREBRAS_MODEL_ID=your_model_id_here
+export CEREBRAS_SYSTEM_MESSAGE="Your custom system message here"
+export CHAR_DELAY=0.03
 ```
 
 # Usage
