@@ -4,7 +4,7 @@ from typing import List, Dict
 
 from cerebras.cloud.sdk import Cerebras
 
-MODEL_ID = "llama3.1-8b"
+MODEL_ID = "llama3.1-70b"
 SYSTEM_MESSAGE = {"role": "system", "content": "You are a helpful assistant."}
 
 
@@ -23,11 +23,10 @@ def generate_response(
 ) -> Dict[str, str]:
     """Generate a response using the Cerebras client."""
     chat_history.append({"role": "user", "content": prompt})
-    response = client.chat.completions.create(
+    return client.chat.completions.create(
         messages=chat_history,
         model=MODEL_ID,
     )
-    return response
 
 
 def print_response(response: Dict[str, str]) -> None:
@@ -51,12 +50,12 @@ def main():
     client = setup_cerebras_client()
     chat_history = [SYSTEM_MESSAGE]
 
-    welcoming_text = f"""
-    Welcome to {MODEL_ID} Text Generator made by (Awan)
-    Happy chat and talk with your {MODEL_ID} AI Generative Model
-    Addhe Warman Putra - (Awan)
-    Type 'exit()' to exit from program
-    """
+    welcoming_text = (
+        f"\nWelcome to {MODEL_ID} Text Generator made by (Awan)\n"
+        f"Happy chat and talk with your {MODEL_ID} AI Generative Model\n"
+        "Addhe Warman Putra - (Awan)\n"
+        "Type 'exit()' to exit from program\n"
+    )
     print(welcoming_text)
 
     while True:
