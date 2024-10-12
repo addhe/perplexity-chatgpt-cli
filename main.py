@@ -1,68 +1,75 @@
 import os
 import time
+from typing import List, Dict
 
-import openai
+from cerebras.cloud.sdk import Cerebras
 
-# Define the model ID as a constant
-MODEL_ID = "gpt-4o"
+MODEL_ID = "llama3.1-8b"
+SYSTEM_MESSAGE = {"role": "system", "content": "You are a helpful assistant."}
 
 
-def setup_openai_api():
-    api_key = os.getenv("OPENAI_API_KEY")
+def setup_cerebras_client() -> Cerebras:
+    """Set up and return the Cerebras client."""
+    api_key = os.getenv("CEREBRAS_API_KEY")
     if not api_key:
-        raise ValueError("Missing OpenAI API Key.")
-    openai.api_key = api_key
+        raise ValueError("Missing Cerebras API Key.")
+    return Cerebras(api_key=api_key)
 
 
-def generate_content(prompt: str, conversation_history: list):
-    try:
-        setup_openai_api()
-
-        # Add new user prompt to the conversation history
-        conversation_history.append({"role": "user", "content": prompt})
-
-        response = openai.ChatCompletion.create(
-            model=MODEL_ID,
-            messages=conversation_history,
-        )
-
-        message = response['choices'][0]['message']["content"]
-
-        # Add assistant's response to the conversation history
-        conversation_history.append({"role": "assistant", "content": message})
-
-        for char in message:
-            print(char, end="", flush=True)
-            time.sleep(0.02)
-    except Exception as e:
-        print(f"An error occurred: {e}")
+def generate_response(
+    client: Cerebras,
+    prompt: str,
+    chat_history: List[Dict[str, str]]
+) -> Dict[str, str]:
+    """Generate a response using the Cerebras client."""
+    chat_history.append({"role": "user", "content": prompt})
+    response = client.chat.completions.create(
+        messages=chat_history,
+        model=MODEL_ID,
+    )
+    return response
 
 
-def main(input_prompt=None):
-    """Main function."""
+def print_response(response: Dict[str, str]) -> None:
+    """Print the response and performance metrics."""
+    message = response.choices[0].message.content
+
+    for char in message:
+        print(char, end="", flush=True)
+        time.sleep(0.02)
+    print()
+
+    total_tokens = response.usage.total_tokens
+    total_time = response.time_info.total_time
+    tokens_per_second = total_tokens / total_time
+    print(f"(Tokens per second: {tokens_per_second:.2f})")
+    print()
+
+
+def main():
+    """Main function to run the chat application."""
+    client = setup_cerebras_client()
+    chat_history = [SYSTEM_MESSAGE]
+
     welcoming_text = f"""
-    Welcome to {MODEL_ID} Text Generator made by (Awan),
+    Welcome to {MODEL_ID} Text Generator made by (Awan)
     Happy chat and talk with your {MODEL_ID} AI Generative Model
     Addhe Warman Putra - (Awan)
-    type 'exit()' to exit from program
+    Type 'exit()' to exit from program
     """
     print(welcoming_text)
 
-    # Initialize conversation history with system message
-    conversation_history = [
-        {"role": "system", "content": "You are a helpful assistant."}
-    ]
+    while True:
+        user_input = input("> ")
+        if user_input.lower() == "exit()":
+            break
 
-    if input_prompt is None:
-        while True:
-            prompt = input("\n> ")
-            if prompt == "exit()":
-                exit()
-            generate_content(prompt, conversation_history)
-    else:
-        if input_prompt == "exit()":
-            exit()
-        generate_content(input_prompt, conversation_history)
+        response = generate_response(client, user_input, chat_history)
+        chat_history.append({
+            "role": "assistant",
+            "content": response.choices[0].message.content
+        })
+        print_response(response)
 
 
 if __name__ == "__main__":

@@ -1,78 +1,79 @@
-import sys
 import unittest
+from unittest.mock import patch, MagicMock
 from io import StringIO
-from unittest.mock import patch
+import sys
 
-import openai
-
-from main import generate_content, main, setup_openai_api
-
+from main import setup_cerebras_client, generate_response, print_response, main
 
 class TestMain(unittest.TestCase):
 
-    def setUp(self):
-        self.api_key_patcher = patch.object(openai, 'api_key', 'fake-api-key')
-        self.api_key_patcher.start()
+    @patch('main.os.getenv')
+    def test_setup_cerebras_client(self, mock_getenv):
+        mock_getenv.return_value = 'fake-api-key'
+        with patch('main.Cerebras') as mock_cerebras:
+            setup_cerebras_client()
+            mock_cerebras.assert_called_once_with(api_key='fake-api-key')
 
-        self.model_patcher = patch(
-            'openai.ChatCompletion.create', return_value={
-                'choices': [{
-                    'message': {'content': 'This is a fake response from the OpenAI API.'}
-                }]
-            })
-        self.mock_create = self.model_patcher.start()
-
-    def tearDown(self):
-        patch.stopall()
-
-    def test_main(self):
-        captured_output = StringIO()
-        sys.stdout = captured_output
-
-        main(input_prompt="Hello, world!")
-
-        sys.stdout = sys.__stdout__
-
-        actual_output = captured_output.getvalue().strip()
-        # Debug step to see the actual output
-        print(f"Captured Output:\n{actual_output}")
-
-        expected_output_start = """
-        Welcome to gpt-4o Text Generator made by (Awan),
-        Happy chat and talk with your gpt-4o AI Generative Model
-        Addhe Warman Putra - (Awan)
-        type 'exit()' to exit from program
-        """.strip()
-
-        # Normalize both strings to ignore leading/trailing whitespace
-        actual_lines = [line.strip() for line in actual_output.splitlines()]
-        expected_lines = [line.strip()
-                          for line in expected_output_start.splitlines()]
-
-        for expected_line in expected_lines:
-            self.assertIn(expected_line, actual_lines)
-
-        # Ensure the response is in the actual output
-        self.assertIn(
-            "This is a fake response from the OpenAI API.", actual_output)
-
-    @patch('main.os.getenv', return_value='fake-api-key')
-    def test_setup_openai_api(self, mock_getenv):
-        setup_openai_api()
-        self.assertEqual(openai.api_key, "fake-api-key")
-
-    def test_generate_content(self):
-        result = generate_content("Hello, world!")
-        self.assertEqual(result, None)
-
-        self.mock_create.assert_called_once_with(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Hello, world!"},
-            ]
+    @patch('main.Cerebras')
+    def test_generate_response(self, mock_cerebras):
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.return_value = MagicMock(
+            choices=[MagicMock(message=MagicMock(content="Test response"))]
         )
 
+        chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
+        response = generate_response(mock_client, "Test prompt", chat_history)
 
-if __name__ == "__main__":
+        mock_client.chat.completions.create.assert_called_once_with(
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": "Test prompt"}
+            ],
+            model="llama3.1-8b"
+        )
+        self.assertEqual(response, mock_client.chat.completions.create.return_value)
+
+    @patch('builtins.print')
+    @patch('time.sleep')
+    def test_print_response(self, mock_sleep, mock_print):
+        mock_response = MagicMock(
+            choices=[MagicMock(message=MagicMock(content="Test response"))],
+            usage=MagicMock(total_tokens=10),
+            time_info=MagicMock(total_time=1)
+        )
+        print_response(mock_response)
+        mock_print.assert_any_call("(Tokens per second: 10.00)")
+
+@patch('main.setup_cerebras_client')
+@patch('main.generate_response')
+@patch('main.print_response')
+@patch('builtins.input', side_effect=['Test input', 'exit()'])
+def test_main(self, mock_input, mock_print_response, mock_generate_response, mock_setup_client):
+    mock_client = MagicMock()
+    mock_setup_client.return_value = mock_client
+    mock_response = MagicMock()
+    mock_response.choices = [MagicMock(message=MagicMock(content="Test response"))]
+    mock_generate_response.return_value = mock_response
+
+    captured_output = StringIO()
+    sys.stdout = captured_output
+
+    main()
+
+    sys.stdout = sys.__stdout__
+    actual_output = captured_output.getvalue().strip()
+
+    self.assertIn("Welcome to llama3.1-8b Text Generator made by (Awan)", actual_output)
+    self.assertIn("Happy chat and talk with your llama3.1-8b AI Generative Model", actual_output)
+    self.assertIn("Addhe Warman Putra - (Awan)", actual_output)
+    self.assertIn("Type 'exit()' to exit from program", actual_output)
+
+    expected_chat_history = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "assistant", "content": "Test response"}
+    ]
+    mock_generate_response.assert_called_once_with(mock_client, "Test input", expected_chat_history)
+    mock_print_response.assert_called_once_with(mock_response)
+
+if __name__ == '__main__':
     unittest.main()
