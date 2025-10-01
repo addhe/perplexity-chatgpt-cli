@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "perplexity-chatgpt-cli"
+version = "1.0.0"
+authors = [
+  { name="Addhe Warman Putra", email="addhe.warman@gmail.com" },
+]
+description = "A CLI for interacting with Perplexity AI"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "requests",
+    "click",
+    "rich",
+    "pyyaml",
+    "pydantic"
+]
+
+[project.scripts]
+perplexity-cli = "perplexity_cli.cli.main:cli"

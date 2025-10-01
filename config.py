@@ -2,16 +2,10 @@
 import os
 
 # Model configuration
-MODEL_ID = os.getenv("CEREBRAS_MODEL_ID", "llama3.1-70b")
-
-# System message configuration
-SYSTEM_MESSAGE = {
-    "role": "system",
-    "content": os.getenv("CEREBRAS_SYSTEM_MESSAGE", "You are a helpful assistant.")
-}
+MODEL_ID = os.getenv("PERPLEXITY_MODEL", "llama-3.1-sonar-small-128k-online")
 
 # API configuration
-API_KEY = os.getenv("CEREBRAS_API_KEY")
+API_KEY = os.getenv("PERPLEXITY_API_KEY")
 
 # Application configuration
 CHAR_DELAY = float(os.getenv("CHAR_DELAY", "0.02"))
