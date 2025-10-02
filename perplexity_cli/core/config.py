@@ -27,7 +27,7 @@ class Config:
     api: APIConfig = field(default_factory=APIConfig)
     cli: CLIConfig = field(default_factory=CLIConfig)
     api_key: Optional[str] = None
-    model: str = "llama-3.1-sonar-small-128k-online"
+    model: str = "sonar-pro"
 
     def __post_init__(self):
         """Load configuration from environment variables."""

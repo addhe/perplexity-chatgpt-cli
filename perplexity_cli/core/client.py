@@ -1,6 +1,6 @@
 """Perplexity API client implementation."""
 
-import requests
+from perplexity import Perplexity
 import time
 from typing import Optional, Any
 
@@ -14,6 +14,7 @@ class PerplexityClient:
     def __init__(self, config: Config) -> None:
         """Initialize client with configuration."""
         self.config = config
+        self.client = Perplexity(api_key=self.config.api_key)
 
     def generate_response(self, prompt: str) -> Optional[Any]:
         """Generates a response using the Perplexity API."""
@@ -22,30 +23,14 @@ class PerplexityClient:
             {"role": "user", "content": prompt}
         ]
 
-        payload = {
-            "model": self.config.model,
-            "messages": messages,
-        }
-
-        headers = {
-            "Authorization": f"Bearer {self.config.api_key}",
-            "Content-Type": "application/json"
-        }
-
         try:
-            response = requests.post(
-                f"{self.config.api.base_url}/chat/completions",
-                json=payload,
-                headers=headers,
-                timeout=self.config.api.timeout
+            completion = self.client.chat.completions.create(
+                model=self.config.model,
+                messages=messages,
             )
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            click.echo(f"Error communicating with Perplexity API: {e}", err=True)
-            return None
+            return completion
         except Exception as e:
-            click.echo(f"An unexpected error occurred: {e}", err=True)
+            click.echo(f"Error communicating with Perplexity API: {e}", err=True)
             return None
 
     def print_response(self, response: Optional[Any]) -> None:
@@ -54,10 +39,10 @@ class PerplexityClient:
             click.echo("Failed to generate a response.", err=True)
             return
 
-        message: str = response.get('choices', [{}])[0].get(
-            'message', {}).get('content', '')
+        message: str = response.choices[0].message.content
 
         for char in message:
             click.echo(char, nl=False)
             time.sleep(self.config.cli.char_delay)
         click.echo()
+
