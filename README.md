@@ -1,54 +1,102 @@
-# Cerebras AI Chat Application
-This is a Python-based chat application that uses the Cerebras AI model to generate responses. It allows users to interact with a large language model in a conversational manner.
+# Perplexity AI CLI
+
+A command-line interface for interacting with the Perplexity AI API.
 
 ## Features
-* Utilizes the Cerebras LLaMA 3.1 70B model
-* Interactive command-line interface
-* Real-time response generation
-* Performance metrics display (tokens per second)
-* Typewriter-style output for responses
 
-## Prerequisites
-* Python 3.6+
-* Cerebras Cloud SDK
-* Cerebras API Key
+*   Interactive chat session.
+*   Powered by Perplexity AI.
+*   Configurable via a YAML file and environment variables.
+*   Modern CLI built with `click`.
+*   High test coverage with `pytest`.
 
 ## Installation
-1. Clone this repository or download the main.py file.
-2. Install the required dependencies:
-```
-pip install cerebras-cloud-sdk
-```
-3. Set up your Cerebras API Key as an environment variable:
-```
-export CEREBRAS_API_KEY=your_api_key_here
-export CEREBRAS_MODEL_ID=your_model_id_here
-export CEREBRAS_SYSTEM_MESSAGE="Your custom system message here"
-export CHAR_DELAY=0.03
+
+1.  Clone this repository:
+    ```bash
+    git clone https://github.com/addhe/perplexity-chatgpt-cli.git
+    cd perplexity-chatgpt-cli
+    ```
+
+2.  Install the dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+3.  Install the application in editable mode:
+    ```bash
+    pip install -e .
+    ```
+
+## Usage
+
+To start the interactive chat session, run the following command:
+
+```bash
+perplexity-cli
 ```
 
-# Usage
-Run the script using Python:
+### Options
+
+*   `--api-key`: Your Perplexity AI API key.
+*   `--model`: The model to use for completions (e.g., `sonar-pro`).
+
+## Configuration
+
+The application can be configured via a YAML file and environment variables.
+
+### Configuration File
+
+A configuration file named `config.yaml` can be created in the `~/.perplexity-cli/` directory.
+
+Here is an example of the configuration file:
+
+```yaml
+api:
+  base_url: https://api.perplexity.ai
+  timeout: 30
+cli:
+  char_delay: 0.0
+model: sonar-pro
 ```
-python main.py
+
+### Environment Variables
+
+You can also configure the application using environment variables:
+
+*   `PERPLEXITY_API_KEY`: Your Perplexity AI API key.
+*   `PERPLEXITY_MODEL`: The model to use for completions.
+*   `CHAR_DELAY`: The character delay for the typewriter effect.
+
+## Development
+
+### Setting up the Development Environment
+
+1.  Create a virtual environment:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate
+    ```
+
+2.  Install the dependencies:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+### Running the Tests
+
+To run the tests, use the following command:
+
+```bash
+pytest
 ```
 
-* The application will start and display a welcome message.
-* Enter your prompts at the > prompt.
-* The AI will generate and display responses.
-* Type exit() to quit the application.
+To get a coverage report, use the following command:
 
-# Code Structure
-* ```setup_cerebras_client()```: Sets up the Cerebras client using the API key.
-* ```generate_response()```: Generates a response using the Cerebras model.
-* ```print_response()```: Prints the AI's response with a typewriter effect and displays performance metrics.
-* ```main()```: The main function that runs the chat loop.
+```bash
+pytest --cov=perplexity_cli
+```
 
-# Author
-Addhe Warman Putra (Awan)
+## License
 
-# License
-This project is open-source and available under the MIT License.
-
-# Disclaimer
-This application requires a valid Cerebras API key and access to the Cerebras Cloud platform. Make sure you have the necessary permissions and subscriptions before using this application.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
