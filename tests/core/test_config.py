@@ -22,7 +22,7 @@ def test_load_default_config(temp_config_dir: Path):
     assert isinstance(config.api, APIConfig)
     assert isinstance(config.cli, CLIConfig)
     assert config.api_key is None
-    assert config.model == "llama-3.1-sonar-small-128k-online"
+    assert config.model == "sonar-pro"
 
 def test_load_config_from_file(temp_config_dir: Path):
     """Tests loading the configuration from a YAML file."""

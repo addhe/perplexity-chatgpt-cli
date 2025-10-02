@@ -26,3 +26,6 @@ dependencies = [
 
 [project.scripts]
 perplexity-cli = "perplexity_cli.cli.main:cli"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

@@ -3,7 +3,6 @@
 from unittest.mock import patch, MagicMock
 
 import pytest
-import requests
 from click.testing import CliRunner
 
 from perplexity_cli.core.client import PerplexityClient
@@ -19,36 +18,24 @@ def runner() -> CliRunner:
     """Returns a click CliRunner."""
     return CliRunner()
 
-@patch('requests.post')
-def test_generate_response_success(mock_post, config: Config):
+@patch('perplexity_cli.core.client.Perplexity')
+def test_generate_response_success(mock_perplexity, config: Config):
     """Tests successful response generation."""
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {'choices': [{'message': {'content': 'Hello, world!'}}]}
-    mock_post.return_value = mock_response
+    mock_completion = MagicMock()
+    mock_completion.choices[0].message.content = 'Hello, world!'
+    mock_perplexity.return_value.chat.completions.create.return_value = mock_completion
 
     client = PerplexityClient(config)
     response = client.generate_response("Hello")
 
     assert response is not None
-    assert response['choices'][0]['message']['content'] == 'Hello, world!'
+    assert response.choices[0].message.content == 'Hello, world!'
 
-@patch('requests.post')
-def test_generate_response_api_error(mock_post, config: Config):
+@patch('perplexity_cli.core.client.Perplexity')
+def test_generate_response_api_error(mock_perplexity, config: Config):
     """Tests handling of API errors."""
-    mock_response = MagicMock()
-    mock_response.status_code = 500
-    mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError
-    mock_post.return_value = mock_response
+    mock_perplexity.return_value.chat.completions.create.side_effect = Exception("API Error")
 
-    client = PerplexityClient(config)
-    response = client.generate_response("Hello")
-
-    assert response is None
-
-@patch('requests.post', side_effect=requests.exceptions.RequestException("Test error"))
-def test_generate_response_network_error(mock_post, config: Config):
-    """Tests handling of network errors."""
     client = PerplexityClient(config)
     response = client.generate_response("Hello")
 
@@ -56,11 +43,12 @@ def test_generate_response_network_error(mock_post, config: Config):
 
 def test_print_response(config: Config, runner: CliRunner):
     """Tests the print_response method."""
-    response_data = {'choices': [{'message': {'content': 'Hello'}}]}
+    mock_completion = MagicMock()
+    mock_completion.choices[0].message.content = 'Hello'
     client = PerplexityClient(config)
 
     with runner.isolation() as (stdout, _):
-        client.print_response(response_data)
+        client.print_response(mock_completion)
         output = stdout.getvalue().decode('utf-8')
         assert "Hello" in output
 
